@@ -1,11 +1,7 @@
 #include "cpu.hpp"
-
 #include <windows.h>
-#include <ntpoapi.h>   // 🔑 THIS IS THE KEY HEADER
-#include <powrprof.h>
-
-#pragma comment(lib, "PowrProf.lib")
-
+#include <intrin.h>
+#include <string>
 
 CpuTimes getCpuTimes(){
     FILETIME idleTime, kernelTime, userTime;
@@ -31,15 +27,30 @@ double getCpuUsage( const CpuTimes& prev, const CpuTimes& curr ){
     ULONGLONG totalCurr = curr.kernel + curr.user;  // find total current usage
     ULONGLONG totalDiff = totalCurr - totalPrev; // find difference
 
-    return 100.0 * (totalDiff - idleDiff) / totalDiff; //final cpu usage
+if (totalDiff == 0) return 0.0;
+return 100.0 * (totalDiff - idleDiff) / totalDiff;
 }
 
-double getCpuFrequencyGHZ(){
-    PROCESSOR_POWER_INFORMATION info;
+double getCpuFrequencyGHz() {
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
 
+    // freq is ticks per second
+    return freq.QuadPart / 1e9; // GHz-ish scale
+}
 
-    CallNtPowerInformation(ProcessorInformation, nullptr, 0, &info, sizeof(info));
+std::string getCpuName(){
+    int cpuInfo[4] = {};
+    char name[49] = {};
 
-    return info.CurrentMhz / 1000.0;        //mhz to ghz conversion
+    __cpuid(cpuInfo, 0x80000000);
+    unsigned int maxId = cpuInfo[0];
 
+    if (maxId >= 0x80000004) {
+        __cpuid(reinterpret_cast<int*>(name),     0x80000002);
+        __cpuid(reinterpret_cast<int*>(name + 16), 0x80000003);
+        __cpuid(reinterpret_cast<int*>(name + 32), 0x80000004);
+    }
+
+     return std::string(name);
 }

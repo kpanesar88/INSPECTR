@@ -1,17 +1,18 @@
 #include <iostream>
 #include <windows.h>
-#include <cpu.hpp>
+#include <monitor/cpu.hpp>
 
-
-
-int main (){
+int main() {
 
     CpuTimes prev = getCpuTimes();
-    sleep(100);
+    Sleep(100);
     CpuTimes curr = getCpuTimes();
 
-
     double usage = getCpuUsage(prev, curr);
-    std::cout << "CPU USAGE: " << usage << "%\n";
+    double freq  = getCpuFrequencyGHz();
+    std::string cpu_name = getCpuName();  
 
+    std::cout << "CPU NAME: " << cpu_name << "\n";
+    std::cout << "CPU USAGE: " << usage << "%\n";
+    std::cout << "CPU FREQ (GHz): " << freq << "\n";
 }
