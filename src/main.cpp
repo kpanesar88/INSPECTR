@@ -9,6 +9,9 @@
 
 #include <monitor/cpu.hpp>
 #include <monitor/memory.hpp>
+#include <monitor/systeminfo.hpp>
+
+
 
 int main() {
 
@@ -37,14 +40,27 @@ int main() {
 
     std::cout << std::fixed << std::setprecision(2);
 
+    OSInfo os = getOSInfo();
+    std::string uptime = getSystemUptime();
+
+    std::cout << "\n----------CPU----------\n";
     std::cout << "CPU NAME: " << cpuName << "\n";
     std::cout << "CPU USAGE: " << usage << "%\n";
     std::cout << "BASE CPU FREQ (GHz): " << freq << "\n";
     std::cout << "CPU CORES: " << cores << "\n";
     std::cout << "CPU THREADS: " << threads << "\n";
+
+    std::cout << "\n----------MEMORY----------\n";
     std::cout << "TOTAL MEMORY: " << totalMemGB << " GB\n";
     std::cout << "USED MEMORY: " << usedMemGB<< " GB\n";
     std::cout << "RAM USAGE %: " << ramUsagePercentage << "%\n";
+
+    std::cout << "\n----------SYSTEM----------\n";
+    std::cout << "OS: Windows " << os.version
+          << " (Build " << os.build << ")\n";
+    std::cout << "Uptime: " << uptime << "\n";
+
+
 
 
     return 0;
