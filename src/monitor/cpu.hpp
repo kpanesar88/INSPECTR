@@ -1,18 +1,12 @@
 #pragma once
 #include <string>
 
-struct CpuTimes {
-    unsigned long long idle;
-    unsigned long long kernel;
-    unsigned long long user;
+struct CpuInfo {
+    std::string name;
+    double usage_percent;
+    double base_freq_ghz;
+    int cores;
+    int threads;
 };
 
-CpuTimes getCpuTimes();
-double getCpuUsage(const CpuTimes& prev, const CpuTimes& curr);
-double getBaseCpuFrequencyGHz();
-
-// ✅ ONE declaration, exactly this
-std::string getCpuName();
-
-void getCpuCoresAndThreads(int& cores, int& threads);
-
+CpuInfo getCpuInfo();

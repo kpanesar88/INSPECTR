@@ -1,51 +1,51 @@
 #include "systeminfo.hpp"
-#include <windows.h>
-#include <sstream>
-
-// ==========================
-// OS INFO
-// ==========================
 
 #include <windows.h>
 #include <winternl.h>
+#include <sstream>
+#include <string>
+
+// ==========================
+// INTERNAL NT VERSION QUERY
+// ==========================
 
 typedef LONG (WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
 
-OSInfo getOSInfo() {
-    OSInfo info;
+// ==========================
+// PUBLIC API (v1.1)
+// ==========================
 
+SystemInfo getSystemInfo() {
+    SystemInfo info{};
+
+    // -------- OS VERSION --------
     RTL_OSVERSIONINFOW osvi{};
     osvi.dwOSVersionInfoSize = sizeof(osvi);
 
     HMODULE hMod = GetModuleHandleW(L"ntdll.dll");
     if (hMod) {
         auto rtlGetVersion =
-            (RtlGetVersionPtr)GetProcAddress(hMod, "RtlGetVersion");
+            reinterpret_cast<RtlGetVersionPtr>(
+                GetProcAddress(hMod, "RtlGetVersion"));
 
         if (rtlGetVersion && rtlGetVersion(&osvi) == 0) {
-            info.build = std::to_string(osvi.dwBuildNumber);
-            info.name = "Windows";
-            info.version =
+            std::string version =
                 (osvi.dwBuildNumber >= 22000) ? "11" : "10";
-            return info;
+
+            info.os =
+                "Windows " + version +
+                " (Build " + std::to_string(osvi.dwBuildNumber) + ")";
         }
     }
 
-    // Fallback (should almost never hit)
-    info.name = "Windows";
-    info.version = "Unknown";
-    info.build = "Unknown";
-    return info;
-}
+    if (info.os.empty()) {
+        info.os = "Windows (Unknown Version)";
+    }
 
-// ==========================
-// SYSTEM UPTIME
-// ==========================
-
-std::string getSystemUptime() {
+    // -------- SYSTEM UPTIME --------
     ULONGLONG uptimeMs = GetTickCount64();
-
     ULONGLONG totalSeconds = uptimeMs / 1000;
+
     ULONGLONG days    = totalSeconds / 86400;
     ULONGLONG hours   = (totalSeconds % 86400) / 3600;
     ULONGLONG minutes = (totalSeconds % 3600) / 60;
@@ -55,5 +55,7 @@ std::string getSystemUptime() {
         << hours << "h "
         << minutes << "m";
 
-    return oss.str();
+    info.uptime = oss.str();
+
+    return info;
 }

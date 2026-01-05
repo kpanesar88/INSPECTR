@@ -1,11 +1,9 @@
 #pragma once
 #include <string>
 
-struct OSInfo {
-    std::string name;
-    std::string version;
-    std::string build;
+struct SystemInfo {
+    std::string os;      // e.g. "Windows 11 (Build 22631)"
+    std::string uptime; // e.g. "2d 5h 41m"
 };
 
-OSInfo getOSInfo();
-std::string getSystemUptime();
+SystemInfo getSystemInfo();

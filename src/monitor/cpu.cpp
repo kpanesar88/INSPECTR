@@ -4,18 +4,42 @@
 #include <intrin.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 // ==========================
-// CPU USAGE
+// INTERNAL CPU TYPES
 // ==========================
 
-CpuTimes getCpuTimes() {
+struct CpuTimes {
+    ULONGLONG idle;
+    ULONGLONG kernel;
+    ULONGLONG user;
+};
+
+// ==========================
+// INTERNAL HELPERS
+// ==========================
+
+static int popcount64(uint64_t value) {
+    int count = 0;
+    while (value) {
+        count += value & 1;
+        value >>= 1;
+    }
+    return count;
+}
+
+// ==========================
+// CPU USAGE (INTERNAL)
+// ==========================
+
+static CpuTimes getCpuTimes() {
     FILETIME idleTime, kernelTime, userTime;
     GetSystemTimes(&idleTime, &kernelTime, &userTime);
 
     auto toULL = [](FILETIME ft) {
         return (static_cast<ULONGLONG>(ft.dwHighDateTime) << 32) |
-                ft.dwLowDateTime;
+               ft.dwLowDateTime;
     };
 
     return {
@@ -25,17 +49,15 @@ CpuTimes getCpuTimes() {
     };
 }
 
-double getCpuUsage(const CpuTimes& prev, const CpuTimes& curr) {
+static double getCpuUsage(const CpuTimes& prev, const CpuTimes& curr) {
 
-    // Guard against invalid samples
     if (curr.idle   < prev.idle ||
         curr.kernel < prev.kernel ||
         curr.user   < prev.user) {
         return 0.0;
     }
 
-    ULONGLONG idleDiff =
-        curr.idle - prev.idle;
+    ULONGLONG idleDiff = curr.idle - prev.idle;
 
     ULONGLONG totalDiff =
         (curr.kernel + curr.user) -
@@ -52,12 +74,11 @@ double getCpuUsage(const CpuTimes& prev, const CpuTimes& curr) {
     return usage * 100.0;
 }
 
-
 // ==========================
-// CPU FREQUENCY (GHz)
+// CPU BASE FREQUENCY (GHz)
 // ==========================
 
-double getBaseCpuFrequencyGHz() {
+static double getBaseCpuFrequencyGHz() {
     HKEY hKey;
     DWORD mhz = 0;
     DWORD size = sizeof(DWORD);
@@ -71,7 +92,8 @@ double getBaseCpuFrequencyGHz() {
         return 0.0;
     }
 
-    RegQueryValueExA(hKey, "~MHz", nullptr, nullptr, (LPBYTE)&mhz, &size);
+    RegQueryValueExA(hKey, "~MHz", nullptr, nullptr,
+                     reinterpret_cast<LPBYTE>(&mhz), &size);
     RegCloseKey(hKey);
 
     return mhz / 1000.0;
@@ -81,7 +103,7 @@ double getBaseCpuFrequencyGHz() {
 // CPU NAME
 // ==========================
 
-std::string getCpuName() {
+static std::string getCpuName() {
     int cpuInfo[4] = {};
     char name[49] = {};
 
@@ -101,7 +123,7 @@ std::string getCpuName() {
 // CPU CORES & THREADS
 // ==========================
 
-void getCpuCoresAndThreads(int& cores, int& threads) {
+static void getCpuCoresAndThreads(int& cores, int& threads) {
     cores = 0;
     threads = 0;
 
@@ -128,10 +150,33 @@ void getCpuCoresAndThreads(int& cores, int& threads) {
 
         if (current->Relationship == RelationProcessorCore) {
             cores++;
-            threads += __popcnt(
-                current->Processor.GroupMask[0].Mask);
+            threads += popcount64(
+                static_cast<uint64_t>(
+                    current->Processor.GroupMask[0].Mask
+                )
+            );
         }
 
         ptr += current->Size;
     }
+}
+
+// ==========================
+// PUBLIC API (v1.1)
+// ==========================
+
+CpuInfo getCpuInfo() {
+    CpuInfo info{};
+
+    CpuTimes prev = getCpuTimes();
+    Sleep(500);
+    CpuTimes curr = getCpuTimes();
+
+    info.usage_percent = getCpuUsage(prev, curr);
+    info.base_freq_ghz = getBaseCpuFrequencyGHz();
+    info.name          = getCpuName();
+
+    getCpuCoresAndThreads(info.cores, info.threads);
+
+    return info;
 }

@@ -1,6 +1,4 @@
 #include <iostream>
-#include <windows.h>
-#include <cstdint>
 #include <iomanip>
 
 #include <monitor/cpu.hpp>
@@ -9,44 +7,36 @@
 
 int main() {
 
-    CpuTimes prev = getCpuTimes();
-    Sleep(500);
-    CpuTimes curr = getCpuTimes();
-
-    double usage = getCpuUsage(prev, curr);
-    double freq  = getBaseCpuFrequencyGHz();
-    std::string cpuName = getCpuName();
-
-    int cores = 0;
-    int threads = 0;
-    getCpuCoresAndThreads(cores, threads);
-
-    MemoryInfo mem = getMemoryInfo();
+    // Snapshot APIs (v1.1)
+    CpuInfo cpu     = getCpuInfo();
+    MemoryInfo mem  = getMemoryInfo();
+    SystemInfo sys  = getSystemInfo();
 
     std::cout << std::fixed << std::setprecision(2);
 
-    OSInfo os = getOSInfo();
-    std::string uptime = getSystemUptime();
+    std::cout << "=== SYSTEM BUDDY ===\n";
 
-    std::cout << "\n----------CPU----------\n";
-    std::cout << "CPU NAME: " << cpuName << "\n";
-    std::cout << "CPU USAGE: " << usage << "%\n";
-    std::cout << "BASE CPU FREQ (GHz): " << freq << "\n";
-    std::cout << "CPU CORES: " << cores << "\n";
-    std::cout << "CPU THREADS: " << threads << "\n";
+    // ---------------- CPU ----------------
+    std::cout << "\n---------- CPU ----------\n";
+    std::cout << "Name            : " << cpu.name << "\n";
+    std::cout << "Usage           : " << cpu.usage_percent << " %\n";
+    std::cout << "Base Frequency  : " << cpu.base_freq_ghz << " GHz\n";
+    std::cout << "Cores           : " << cpu.cores << "\n";
+    std::cout << "Threads         : " << cpu.threads << "\n";
 
+    // ---------------- MEMORY ----------------
     double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
     double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
-    std::cout << "\n----------MEMORY----------\n";
-    std::cout << "TOTAL MEMORY: " << totalMemGB << " GB\n";
-    std::cout << "USED MEMORY: " << usedMemGB << " GB\n";
-    std::cout << "RAM USAGE %: " << mem.usage_percent << "%\n";
+    std::cout << "\n---------- MEMORY ----------\n";
+    std::cout << "Total           : " << totalMemGB << " GB\n";
+    std::cout << "Used            : " << usedMemGB << " GB\n";
+    std::cout << "Usage           : " << mem.usage_percent << " %\n";
 
-    std::cout << "\n----------SYSTEM----------\n";
-    std::cout << "OS: Windows " << os.version
-              << " (Build " << os.build << ")\n";
-    std::cout << "Uptime: " << uptime << "\n";
+    // ---------------- SYSTEM ----------------
+    std::cout << "\n---------- SYSTEM ----------\n";
+    std::cout << "OS              : " << sys.os << "\n";
+    std::cout << "Uptime          : " << sys.uptime << "\n";
 
     return 0;
 }
