@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <thread>
 #include <chrono>
+#include <conio.h>
 
 #include <monitor/cpu.hpp>
 #include <monitor/memory.hpp>
@@ -14,6 +15,14 @@ int main() {
     std::cout << std::fixed << std::setprecision(2);
 
     while (true) {
+
+          if (_kbhit()) {
+        char ch = _getch();
+        if (ch == 'q' || ch == 'Q') {
+            break;
+        }
+         }
+
         system("cls");
 
         CpuInfo cpu     = getCpuInfo();
@@ -43,6 +52,9 @@ int main() {
         std::cout << "\n---------- SYSTEM ----------\n";
         std::cout << "OS              : " << sys.os << "\n";
         std::cout << "Uptime          : " << sys.uptime << "\n";
+
+        std::cout << "\n---------- PRESS Q TO QUIT ----------\n";
+
 
         std::this_thread::sleep_for(
             std::chrono::milliseconds(REFRESH_MS)
