@@ -3,12 +3,31 @@
 #include <thread>
 #include <chrono>
 #include <conio.h>
+#include <string>
+#include <cstdlib>
 
 #include <monitor/cpu.hpp>
 #include <monitor/memory.hpp>
 #include <monitor/systeminfo.hpp>
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    int refreshMs = 1000;
+
+    for (int i = 1; i < argc; ++i){
+        std::string arg = argv[i];
+
+        if (arg == "--interval" && i + 1 < argc){
+            int value = std::atoi(argv[i+1]);
+
+            if (value > 0){
+                refreshMs = value;
+            }
+
+            i++;
+        }
+    }
+
 
     constexpr int REFRESH_MS = 1000;
 
@@ -57,7 +76,7 @@ int main() {
 
 
         std::this_thread::sleep_for(
-            std::chrono::milliseconds(REFRESH_MS)
+            std::chrono::milliseconds(refreshMs)
         );
     }
 
