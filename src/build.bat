@@ -7,6 +7,7 @@ cl /nologo /std:c++20 /EHsc /W4 ^
    monitor\cpu.cpp ^
    monitor\memory.cpp ^
    monitor\systeminfo.cpp ^
+   monitor\storage.cpp ^
    /I . /I monitor ^
    Advapi32.lib ^
    /Fe:SystemBuddy.exe

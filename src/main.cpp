@@ -9,6 +9,7 @@
 #include <monitor/cpu.hpp>
 #include <monitor/memory.hpp>
 #include <monitor/systeminfo.hpp>
+#include <monitor/storage.hpp>
 
 int main(int argc, char* argv[]) {
 
@@ -47,6 +48,8 @@ int main(int argc, char* argv[]) {
         CpuInfo cpu     = getCpuInfo();
         MemoryInfo mem  = getMemoryInfo();
         SystemInfo sys  = getSystemInfo();
+        StorageInfo storage = getStorageInfo();
+
 
         std::cout << "=== SYSTEM BUDDY (v2.0) ===\n";
 
@@ -66,6 +69,15 @@ int main(int argc, char* argv[]) {
         std::cout << "Total           : " << totalMemGB << " GB\n";
         std::cout << "Used            : " << usedMemGB << " GB\n";
         std::cout << "Usage           : " << mem.usage_percent << " %\n";
+
+        double totalDiskGB = storage.total_bytes / (1024.0 * 1024.0 * 1024.0);
+        double usedDiskGB  = storage.used_bytes  / (1024.0 * 1024.0 * 1024.0);
+
+        std::cout << "\n---------- STORAGE ----------\n";
+        std::cout << "Total           : " << totalDiskGB << " GB\n";
+        std::cout << "Used            : " << usedDiskGB << " GB\n";
+        std::cout << "Usage           : " << storage.usage_percent << " %\n";
+
 
         // ---------------- SYSTEM ----------------
         std::cout << "\n---------- SYSTEM ----------\n";
