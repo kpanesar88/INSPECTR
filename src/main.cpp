@@ -65,6 +65,7 @@ int main(int argc, char* argv[]) {
         double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
         double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
+
         std::cout << "\n---------- MEMORY ----------\n";
         std::cout << "Total           : " << totalMemGB << " GB\n";
         std::cout << "Used            : " << usedMemGB << " GB\n";
@@ -72,10 +73,12 @@ int main(int argc, char* argv[]) {
 
         double totalDiskGB = storage.total_bytes / (1024.0 * 1024.0 * 1024.0);
         double usedDiskGB  = storage.used_bytes  / (1024.0 * 1024.0 * 1024.0);
+        double availableDiskGB  = totalDiskGB - usedDiskGB;
 
         std::cout << "\n---------- STORAGE ----------\n";
         std::cout << "Total           : " << totalDiskGB << " GB\n";
         std::cout << "Used            : " << usedDiskGB << " GB\n";
+        std::cout << "Available       : " << availableDiskGB << " GB\n";
         std::cout << "Usage           : " << storage.usage_percent << " %\n";
 
 
