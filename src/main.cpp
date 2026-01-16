@@ -12,12 +12,14 @@
 #include <monitor/storage.hpp>
 #include <monitor/output.hpp>
 
-
 int main(int argc, char* argv[]) {
 
     int refreshMs = 1000;
     bool runOnce = false;
-    int durationSeconds = -1; // NEW: -1 = infinite
+    int durationSeconds = -1;
+
+    bool outputJsonFlag = false;
+    bool outputCsvFlag  = false;
 
     // ---------------- ARG PARSING ----------------
     for (int i = 1; i < argc; ++i) {
@@ -26,6 +28,12 @@ int main(int argc, char* argv[]) {
         if (arg == "--once") {
             runOnce = true;
         }
+        else if (arg == "--json") {
+            outputJsonFlag = true;
+        }
+        else if (arg == "--csv") {
+            outputCsvFlag = true;
+        }
         else if (arg == "--interval" && i + 1 < argc) {
             int value = std::atoi(argv[i + 1]);
             if (value > 0) {
@@ -33,7 +41,7 @@ int main(int argc, char* argv[]) {
             }
             i++;
         }
-        else if (arg == "--duration" && i + 1 < argc) { // NEW
+        else if (arg == "--duration" && i + 1 < argc) {
             int value = std::atoi(argv[i + 1]);
             if (value > 0) {
                 durationSeconds = value;
@@ -49,29 +57,42 @@ int main(int argc, char* argv[]) {
 
     std::cout << std::fixed << std::setprecision(2);
 
-    // NEW: start time for duration tracking
     auto startTime = std::chrono::steady_clock::now();
 
     do {
 
         // Quit with Q (live mode only)
-        if (!runOnce && _kbhit()) {
-            char ch = _getch();
+        if (!runOnce && !outputJsonFlag && !outputCsvFlag && _kbhit()) {
+            int ch = _getch();
             if (ch == 'q' || ch == 'Q') {
                 break;
             }
         }
 
-        system("cls");
+        if (!outputJsonFlag && !outputCsvFlag) {
+            system("cls");
+        }
 
-        CpuInfo cpu           = getCpuInfo();
-        MemoryInfo mem        = getMemoryInfo();
+        CpuInfo cpu = getCpuInfo();
+        MemoryInfo mem = getMemoryInfo();
         std::vector<StorageDevice> storageDevices = getStorageDevices();
-        SystemInfo sys        = getSystemInfo();
+        SystemInfo sys = getSystemInfo();
 
-        std::cout << "=== SYSTEM BUDDY (v2.0) ===\n";
+        // ---------------- JSON / CSV OUTPUT ----------------
+        if (outputJsonFlag) {
+            outputJson(cpu, mem, storageDevices, sys);
+            break;
+        }
 
-        // ---------------- CPU ----------------
+        if (outputCsvFlag) {
+            outputCsv(cpu, mem, storageDevices);
+            break;
+        }
+
+        // ---------------- LIVE TERMINAL OUTPUT ----------------
+        std::cout << "=== SYSTEM BUDDY (v3.2) ===\n";
+
+        // CPU
         std::cout << "\n---------- CPU ----------\n";
         std::cout << "Name            : " << cpu.name << "\n";
         std::cout << "Usage           : " << cpu.usage_percent << " %\n";
@@ -79,7 +100,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Cores           : " << cpu.cores << "\n";
         std::cout << "Threads         : " << cpu.threads << "\n";
 
-        // ---------------- MEMORY ----------------
+        // MEMORY
         double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
         double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
@@ -88,6 +109,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Used            : " << usedMemGB << " GB\n";
         std::cout << "Usage           : " << mem.usage_percent << " %\n";
 
+        // STORAGE
         std::cout << "\n---------- STORAGE ----------\n";
 
         for (const auto& dev : storageDevices) {
@@ -95,14 +117,17 @@ int main(int argc, char* argv[]) {
             double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
             double freeGB  = dev.free_bytes  / (1024.0 * 1024.0 * 1024.0);
 
-            std::cout << dev.drive << " (" << dev.type << ")\n";
+            std::cout << dev.drive
+                      << " [" << dev.label << "] "
+                      << "(" << dev.type << ")\n";
+
             std::cout << "  Total      : " << totalGB << " GB\n";
             std::cout << "  Used       : " << usedGB  << " GB\n";
             std::cout << "  Free       : " << freeGB  << " GB\n";
             std::cout << "  Usage      : " << dev.usage_percent << " %\n\n";
         }
 
-        // ---------------- SYSTEM ----------------
+        // SYSTEM
         std::cout << "\n---------- SYSTEM ----------\n";
         std::cout << "OS              : " << sys.os << "\n";
         std::cout << "Uptime          : " << sys.uptime << "\n";
@@ -111,7 +136,7 @@ int main(int argc, char* argv[]) {
             std::cout << "\n---------- PRESS Q TO QUIT ----------\n";
         }
 
-        // NEW: duration stop condition
+        // Duration stop condition
         if (durationSeconds > 0) {
             auto now = std::chrono::steady_clock::now();
             auto elapsed =
@@ -135,4 +160,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
