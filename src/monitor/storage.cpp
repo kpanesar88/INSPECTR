@@ -1,30 +1,62 @@
 #include "storage.hpp"
 #include <windows.h>
 
-StorageInfo getStorageInfo() {
-    StorageInfo info{};
+static std::string driveTypeToString(UINT type) {
+    switch (type) {
+        case DRIVE_FIXED:     return "Fixed";
+        case DRIVE_REMOVABLE: return "Removable";
+        case DRIVE_REMOTE:    return "Network";
+        case DRIVE_CDROM:     return "CD-ROM";
+        default:              return "Unknown";
+    }
+}
 
-    ULARGE_INTEGER freeBytesAvailable{};
-    ULARGE_INTEGER totalBytes{};
-    ULARGE_INTEGER freeBytes{};
+std::vector<StorageDevice> getStorageDevices() {
+    std::vector<StorageDevice> devices;
 
-    if (!GetDiskFreeSpaceExA(
-            "C:\\",
-            &freeBytesAvailable,
-            &totalBytes,
-            &freeBytes)) {
-        return info;
+    DWORD mask = GetLogicalDrives();
+    if (mask == 0) {
+        return devices;
     }
 
-    info.total_bytes = totalBytes.QuadPart;
-    info.free_bytes  = freeBytes.QuadPart;
-    info.used_bytes  = info.total_bytes - info.free_bytes;
+    for (char letter = 'A'; letter <= 'Z'; ++letter) {
+        if (!(mask & (1 << (letter - 'A')))) {
+            continue;
+        }
 
-    if (info.total_bytes > 0) {
-        info.usage_percent =
-            (static_cast<double>(info.used_bytes) /
-             static_cast<double>(info.total_bytes)) * 100.0;
+        std::string root;
+        root += letter;
+        root += ":\\";
+        
+        UINT type = GetDriveTypeA(root.c_str());
+        if (type == DRIVE_NO_ROOT_DIR || type == DRIVE_UNKNOWN) {
+            continue;
+        }
+
+        ULARGE_INTEGER freeBytes{}, totalBytes{}, freeBytesAvail{};
+        if (!GetDiskFreeSpaceExA(
+                root.c_str(),
+                &freeBytesAvail,
+                &totalBytes,
+                &freeBytes)) {
+            continue;
+        }
+
+        StorageDevice dev{};
+        dev.drive = root;
+        dev.type  = driveTypeToString(type);
+        dev.total_bytes = totalBytes.QuadPart;
+        dev.free_bytes  = freeBytes.QuadPart;
+        dev.used_bytes  = dev.total_bytes - dev.free_bytes;
+
+        if (dev.total_bytes > 0) {
+            dev.usage_percent =
+                (static_cast<double>(dev.used_bytes) /
+                 static_cast<double>(dev.total_bytes)) * 100.0;
+        }
+
+        devices.push_back(dev);
     }
 
-    return info;
+    return devices;
 }

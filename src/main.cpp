@@ -12,6 +12,7 @@
 #include <monitor/storage.hpp>
 #include <monitor/output.hpp>
 
+
 int main(int argc, char* argv[]) {
 
     int refreshMs = 1000;
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
 
         CpuInfo cpu           = getCpuInfo();
         MemoryInfo mem        = getMemoryInfo();
-        StorageInfo storage   = getStorageInfo();
+        std::vector<StorageDevice> storageDevices = getStorageDevices();
         SystemInfo sys        = getSystemInfo();
 
         std::cout << "=== SYSTEM BUDDY (v2.0) ===\n";
@@ -87,16 +88,19 @@ int main(int argc, char* argv[]) {
         std::cout << "Used            : " << usedMemGB << " GB\n";
         std::cout << "Usage           : " << mem.usage_percent << " %\n";
 
-        // ---------------- STORAGE ----------------
-        double totalDiskGB = storage.total_bytes / (1024.0 * 1024.0 * 1024.0);
-        double usedDiskGB  = storage.used_bytes  / (1024.0 * 1024.0 * 1024.0);
-        double availableDiskGB = totalDiskGB - usedDiskGB;
-
         std::cout << "\n---------- STORAGE ----------\n";
-        std::cout << "Total           : " << totalDiskGB << " GB\n";
-        std::cout << "Used            : " << usedDiskGB << " GB\n";
-        std::cout << "Available       : " << availableDiskGB << " GB\n";
-        std::cout << "Usage           : " << storage.usage_percent << " %\n";
+
+        for (const auto& dev : storageDevices) {
+            double totalGB = dev.total_bytes / (1024.0 * 1024.0 * 1024.0);
+            double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
+            double freeGB  = dev.free_bytes  / (1024.0 * 1024.0 * 1024.0);
+
+            std::cout << dev.drive << " (" << dev.type << ")\n";
+            std::cout << "  Total      : " << totalGB << " GB\n";
+            std::cout << "  Used       : " << usedGB  << " GB\n";
+            std::cout << "  Free       : " << freeGB  << " GB\n";
+            std::cout << "  Usage      : " << dev.usage_percent << " %\n\n";
+        }
 
         // ---------------- SYSTEM ----------------
         std::cout << "\n---------- SYSTEM ----------\n";
@@ -131,3 +135,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
