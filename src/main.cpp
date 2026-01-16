@@ -12,17 +12,16 @@
 #include <monitor/storage.hpp>
 #include <monitor/output.hpp>
 
-// ---------- ANSI COLORS (very minimal) ----------
+// ---------- ANSI COLORS ----------
 constexpr const char* CLR_RESET  = "\033[0m";
-constexpr const char* CLR_TITLE  = "\033[36m"; // cyan
-constexpr const char* CLR_HEADER = "\033[34m"; // blue
-constexpr const char* CLR_LABEL  = "\033[37m"; // light gray
+constexpr const char* CLR_BLUE   = "\033[34m";
+constexpr const char* CLR_PINK   = "\033[95m";
+constexpr const char* CLR_DIM    = "\033[90m";
 
 int main(int argc, char* argv[]) {
 
     int refreshMs = 1000;
     bool runOnce = false;
-
     bool outputJsonFlag = false;
     bool outputCsvFlag  = false;
 
@@ -48,64 +47,91 @@ int main(int argc, char* argv[]) {
             if (ch == 'q' || ch == 'Q') break;
         }
 
+        system("cls");
+
         CpuInfo cpu = getCpuInfo();
         MemoryInfo mem = getMemoryInfo();
         auto storageDevices = getStorageDevices();
         SystemInfo sys = getSystemInfo();
 
-        // JSON / CSV MODE
-        if (outputJsonFlag) {
-            outputJson(cpu, mem, storageDevices, sys);
+        // ---------------- JSON / CSV ----------------
+                if (outputJsonFlag) {
+            std::vector<TopProcess> topMem;   // empty for now
+            outputJson(
+                cpu,
+                mem,
+                storageDevices,
+                sys,
+                topMem,
+                cpu.usage_percent, // avgCpu (placeholder)
+                mem.usage_percent, // maxMem (placeholder)
+                1,                 // samples
+                refreshMs
+            );
             break;
         }
-        if (outputCsvFlag) {
-            outputCsv(cpu, mem, storageDevices);
+
+                if (outputCsvFlag) {
+            std::vector<TopProcess> topMem;   // empty for now
+            outputCsv(
+                cpu,
+                mem,
+                storageDevices,
+                topMem,
+                cpu.usage_percent,
+                mem.usage_percent,
+                1,
+                refreshMs
+            );
             break;
         }
 
-        // ---------------- OUTPUT ----------------
-        std::cout << "\n"
-                  << CLR_TITLE << "=== SYSTEM BUDDY v3.2 ===" << CLR_RESET << "\n";
 
-        // CPU
-        std::cout << CLR_HEADER << "\n[ CPU ]" << CLR_RESET << "\n";
-        std::cout << "Name     : " << cpu.name << "\n";
-        std::cout << "Usage    : " << cpu.usage_percent << " %\n";
-        std::cout << "Cores    : " << cpu.cores << "\n";
-        std::cout << "Threads  : " << cpu.threads << "\n";
-        std::cout << "Base Freq: " << cpu.base_freq_ghz << " GHz\n";
+        // ---------------- HEADER ----------------
+        std::cout << CLR_BLUE
+                  << "=== SYSTEM BUDDY v4.0 ==="
+                  << CLR_RESET << "\n";
 
-        // MEMORY
+        // ---------------- CPU ----------------
+        std::cout << CLR_BLUE << "\n[ CPU ]" << CLR_RESET << "\n";
+        std::cout << "Name     : " << CLR_PINK << cpu.name << CLR_RESET << "\n";
+        std::cout << "Usage    : " << CLR_PINK << cpu.usage_percent << " %" << CLR_RESET << "\n";
+        std::cout << "Cores    : " << CLR_PINK << cpu.cores << CLR_RESET << "\n";
+        std::cout << "Threads  : " << CLR_PINK << cpu.threads << CLR_RESET << "\n";
+        std::cout << "BaseFreq : " << CLR_PINK << cpu.base_freq_ghz << " GHz" << CLR_RESET << "\n";
+
+        // ---------------- MEMORY ----------------
         double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
         double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
-        std::cout << CLR_HEADER << "\n[ MEMORY ]" << CLR_RESET << "\n";
-        std::cout << "Total    : " << totalMemGB << " GB\n";
-        std::cout << "Used     : " << usedMemGB  << " GB\n";
-        std::cout << "Usage    : " << mem.usage_percent << " %\n";
+        std::cout << CLR_BLUE << "\n[ MEMORY ]" << CLR_RESET << "\n";
+        std::cout << "Total    : " << CLR_PINK << totalMemGB << " GB" << CLR_RESET << "\n";
+        std::cout << "Used     : " << CLR_PINK << usedMemGB << " GB" << CLR_RESET << "\n";
+        std::cout << "Usage    : " << CLR_PINK << mem.usage_percent << " %" << CLR_RESET << "\n";
 
-        // STORAGE
-        std::cout << CLR_HEADER << "\n[ STORAGE ]" << CLR_RESET << "\n";
+        // ---------------- STORAGE ----------------
+        std::cout << CLR_BLUE << "\n[ STORAGE ]" << CLR_RESET << "\n";
 
         for (const auto& dev : storageDevices) {
             double totalGB = dev.total_bytes / (1024.0 * 1024.0 * 1024.0);
             double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
-            std::cout << dev.drive
+            std::cout << CLR_PINK << dev.drive << CLR_RESET
                       << " [" << dev.label << "] "
                       << "(" << dev.type << ")\n";
-            std::cout << "  Used  : " << usedGB  << " / "
-                      << totalGB << " GB\n";
-            std::cout << "  Usage : " << dev.usage_percent << " %\n";
+
+            std::cout << "  Used   : " << CLR_PINK << usedGB << " / "
+                      << totalGB << " GB" << CLR_RESET << "\n";
+            std::cout << "  Usage  : " << CLR_PINK << dev.usage_percent << " %" << CLR_RESET << "\n";
         }
 
-        // SYSTEM
-        std::cout << CLR_HEADER << "\n[ SYSTEM ]" << CLR_RESET << "\n";
-        std::cout << "OS       : " << sys.os << "\n";
-        std::cout << "Uptime   : " << sys.uptime << "\n";
+        // ---------------- SYSTEM ----------------
+        std::cout << CLR_BLUE << "\n[ SYSTEM ]" << CLR_RESET << "\n";
+        std::cout << "OS       : " << CLR_PINK << sys.os << CLR_RESET << "\n";
+        std::cout << "Uptime   : " << CLR_PINK << sys.uptime << CLR_RESET << "\n";
 
         if (!runOnce) {
-            std::cout << CLR_LABEL
+            std::cout << CLR_DIM
                       << "\nPress Q to quit"
                       << CLR_RESET << "\n";
         }
