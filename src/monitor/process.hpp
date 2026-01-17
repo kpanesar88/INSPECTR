@@ -1,13 +1,17 @@
 #pragma once
 #include <string>
-#include <windows.h>
 #include <vector>
+#include <cstdint>
 
 struct TopProcess {
     std::string name;
-    DWORD pid;
-    double cpu_percent; // valid for CPU list
-    size_t mem_mb;      // valid for memory list
+    uint32_t pid;
+    double cpu_percent;
+    double mem_mb;
 };
 
-std::vector<TopProcess> getTopMemoryProcesses(size_t maxCount);
+// Returns top N by memory usage
+std::vector<TopProcess> getTopMemoryProcesses(size_t limit);
+
+// Returns top N by CPU usage
+std::vector<TopProcess> getTopCpuProcesses(size_t limit);

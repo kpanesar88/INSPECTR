@@ -1,5 +1,6 @@
 #include "output.hpp"
 #include "utils.hpp"
+#include "gpu.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -14,6 +15,7 @@ void outputJson(
     const std::vector<StorageDevice>& storageDevices,
     const SystemInfo& sys,
     const std::vector<TopProcess>& topMem,
+    const GpuInfo& gpu,
     double avgCpu,
     double maxMem,
     int samples,
@@ -39,6 +41,20 @@ void outputJson(
     std::cout << "    \"total_gb\": " << totalMemGB << ",\n";
     std::cout << "    \"used_gb\": " << usedMemGB << ",\n";
     std::cout << "    \"usage_percent\": " << mem.usage_percent << "\n";
+    std::cout << "  },\n";
+
+    // GPU
+    std::cout << "  \"gpu\": {\n";
+    std::cout << "    \"name\": \"" << gpu.name << "\",\n";
+    std::cout << "    \"vram_used_mb\": " << gpu.memory_used_mb << ",\n";
+    std::cout << "    \"vram_total_mb\": " << gpu.memory_total_mb << ",\n";
+
+    if (gpu.usage_supported) {
+        std::cout << "    \"usage_percent\": " << gpu.usage_percent << "\n";
+    } else {
+        std::cout << "    \"usage_percent\": null\n";
+    }
+
     std::cout << "  },\n";
 
     // STORAGE
@@ -100,36 +116,24 @@ void outputJson(
 void outputCsv(
     const CpuInfo& cpu,
     const MemoryInfo& mem,
-    const std::vector<StorageDevice>& storageDevices,
-    const std::vector<TopProcess>& topMem,
+    const std::vector<StorageDevice>&,
+    const std::vector<TopProcess>&,
+    const GpuInfo& gpu,
     double avgCpu,
     double maxMem,
     int samples,
     int intervalMs
 ) {
-      (void)storageDevices;
-      
     double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
     double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
-    // Header
     std::cout
         << "timestamp,hostname,"
         << "cpu_usage,cpu_cores,cpu_threads,"
         << "mem_used_gb,mem_total_gb,"
-        << "avg_cpu,max_mem,"
-        << "samples,interval_ms";
+        << "gpu_name,gpu_vram_used_mb,gpu_vram_total_mb,gpu_usage_percent,"
+        << "avg_cpu,max_mem,samples,interval_ms\n";
 
-    for (size_t i = 0; i < topMem.size(); ++i) {
-        std::cout
-            << ",topmem" << (i + 1) << "_name"
-            << ",topmem" << (i + 1) << "_pid"
-            << ",topmem" << (i + 1) << "_mb";
-    }
-
-    std::cout << "\n";
-
-    // Row
     std::cout
         << getIsoTimestamp() << ","
         << getHostname() << ","
@@ -138,17 +142,18 @@ void outputCsv(
         << cpu.threads << ","
         << usedMemGB << ","
         << totalMemGB << ","
-        << avgCpu << ","
-        << maxMem << ","
-        << samples << ","
-        << intervalMs;
+        << gpu.name << ","
+        << gpu.memory_used_mb << ","
+        << gpu.memory_total_mb << ",";
 
-    for (const auto& p : topMem) {
-        std::cout << ","
-                  << p.name << ","
-                  << p.pid << ","
-                  << p.mem_mb;
-    }
+    if (gpu.usage_supported)
+        std::cout << gpu.usage_percent;
+    else
+        std::cout << "NA";
 
-    std::cout << "\n";
+    std::cout << ","
+              << avgCpu << ","
+              << maxMem << ","
+              << samples << ","
+              << intervalMs << "\n";
 }

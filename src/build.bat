@@ -10,6 +10,7 @@ cl /nologo /std:c++20 /EHsc /W4 ^
    monitor\output.cpp ^
    monitor\storage.cpp ^
    monitor\utils.cpp ^
+   monitor\gpu.cpp ^
    monitor\process.cpp ^
    /I . /I monitor ^
    Advapi32.lib ^

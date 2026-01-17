@@ -5,12 +5,15 @@
 #include <conio.h>
 #include <string>
 #include <cstdlib>
+#include <vector>
 
 #include <monitor/cpu.hpp>
 #include <monitor/memory.hpp>
 #include <monitor/systeminfo.hpp>
 #include <monitor/storage.hpp>
 #include <monitor/output.hpp>
+#include <monitor/process.hpp>
+#include <monitor/gpu.hpp>
 
 // ---------- ANSI COLORS ----------
 constexpr const char* CLR_RESET  = "\033[0m";
@@ -49,35 +52,23 @@ int main(int argc, char* argv[]) {
 
         system("cls");
 
+        // ---------------- COLLECT DATA ----------------
         CpuInfo cpu = getCpuInfo();
         MemoryInfo mem = getMemoryInfo();
         auto storageDevices = getStorageDevices();
         SystemInfo sys = getSystemInfo();
+        GpuInfo gpu = getGpuInfo();
+        auto topMem = getTopMemoryProcesses(5);
 
         // ---------------- JSON / CSV ----------------
-                if (outputJsonFlag) {
-            std::vector<TopProcess> topMem;   // empty for now
+        if (outputJsonFlag) {
             outputJson(
                 cpu,
                 mem,
                 storageDevices,
                 sys,
                 topMem,
-                cpu.usage_percent, // avgCpu (placeholder)
-                mem.usage_percent, // maxMem (placeholder)
-                1,                 // samples
-                refreshMs
-            );
-            break;
-        }
-
-                if (outputCsvFlag) {
-            std::vector<TopProcess> topMem;   // empty for now
-            outputCsv(
-                cpu,
-                mem,
-                storageDevices,
-                topMem,
+                gpu,
                 cpu.usage_percent,
                 mem.usage_percent,
                 1,
@@ -86,10 +77,24 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+        if (outputCsvFlag) {
+            outputCsv(
+                cpu,
+                mem,
+                storageDevices,
+                topMem,
+                gpu,
+                cpu.usage_percent,
+                mem.usage_percent,
+                1,
+                refreshMs
+            );
+            break;
+        }
 
         // ---------------- HEADER ----------------
         std::cout << CLR_BLUE
-                  << "=== SYSTEM BUDDY v4.0 ==="
+                  << "=== SYSTEM BUDDY v4.1 ==="
                   << CLR_RESET << "\n";
 
         // ---------------- CPU ----------------
@@ -109,9 +114,26 @@ int main(int argc, char* argv[]) {
         std::cout << "Used     : " << CLR_PINK << usedMemGB << " GB" << CLR_RESET << "\n";
         std::cout << "Usage    : " << CLR_PINK << mem.usage_percent << " %" << CLR_RESET << "\n";
 
+        // ---------------- GPU ----------------
+        std::cout << CLR_BLUE << "\n[ GPU ]" << CLR_RESET << "\n";
+        std::cout << "Name     : " << CLR_PINK << gpu.name << CLR_RESET << "\n";
+        std::cout << "VRAM     : " << CLR_PINK
+                  << gpu.memory_used_mb << " / "
+                  << gpu.memory_total_mb << " MB"
+                  << CLR_RESET << "\n";
+
+        if (gpu.usage_supported) {
+            std::cout << "Usage    : " << CLR_PINK
+                      << gpu.usage_percent << " %"
+                      << CLR_RESET << "\n";
+        } else {
+            std::cout << "Usage    : " << CLR_DIM
+                      << "Not supported"
+                      << CLR_RESET << "\n";
+        }
+
         // ---------------- STORAGE ----------------
         std::cout << CLR_BLUE << "\n[ STORAGE ]" << CLR_RESET << "\n";
-
         for (const auto& dev : storageDevices) {
             double totalGB = dev.total_bytes / (1024.0 * 1024.0 * 1024.0);
             double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
@@ -120,9 +142,20 @@ int main(int argc, char* argv[]) {
                       << " [" << dev.label << "] "
                       << "(" << dev.type << ")\n";
 
-            std::cout << "  Used   : " << CLR_PINK << usedGB << " / "
-                      << totalGB << " GB" << CLR_RESET << "\n";
-            std::cout << "  Usage  : " << CLR_PINK << dev.usage_percent << " %" << CLR_RESET << "\n";
+            std::cout << "  Used   : " << CLR_PINK
+                      << usedGB << " / " << totalGB << " GB"
+                      << CLR_RESET << "\n";
+            std::cout << "  Usage  : " << CLR_PINK
+                      << dev.usage_percent << " %"
+                      << CLR_RESET << "\n";
+        }
+
+        // ---------------- TOP MEMORY PROCESSES ----------------
+        std::cout << CLR_BLUE << "\n[ TOP MEMORY PROCESSES ]" << CLR_RESET << "\n";
+        for (const auto& p : topMem) {
+            std::cout << CLR_PINK << p.name << CLR_RESET
+                      << " (PID " << p.pid << ") - "
+                      << p.mem_mb << " MB\n";
         }
 
         // ---------------- SYSTEM ----------------
