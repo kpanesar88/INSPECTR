@@ -23,6 +23,9 @@ constexpr const char* CLR_DIM    = "\033[90m";
 
 int main(int argc, char* argv[]) {
 
+    // Prevent stdio sync artifacts
+    std::ios::sync_with_stdio(false);
+
     int refreshMs = 1000;
     bool runOnce = false;
     bool outputJsonFlag = false;
@@ -38,63 +41,76 @@ int main(int argc, char* argv[]) {
         else if (arg == "--interval" && i + 1 < argc) {
             int value = std::atoi(argv[i + 1]);
             if (value > 0) refreshMs = value;
-            i++;
+            ++i;
         }
     }
 
+    const bool interactive = !outputJsonFlag && !outputCsvFlag;
+
     std::cout << std::fixed << std::setprecision(2);
 
+    // ---------------- COLLECT DATA (ONCE) ----------------
+    CpuInfo cpu = getCpuInfo();
+    MemoryInfo mem = getMemoryInfo();
+    auto storageDevices = getStorageDevices();
+    SystemInfo sys = getSystemInfo();
+    GpuInfo gpu = getGpuInfo();
+    auto topMem = getTopMemoryProcesses(5);
+
+    // ---------------- JSON / CSV (EARLY EXIT) ----------------
+    if (outputJsonFlag) {
+        outputJson(
+            cpu,
+            mem,
+            storageDevices,
+            sys,
+            topMem,
+            gpu,
+            cpu.usage_percent,
+            mem.usage_percent,
+            1,
+            refreshMs
+        );
+        return 0;   // 🚫 NO UI, NO CLS
+    }
+
+    if (outputCsvFlag) {
+        outputCsv(
+            cpu,
+            mem,
+            storageDevices,
+            topMem,
+            gpu,
+            cpu.usage_percent,
+            mem.usage_percent,
+            1,
+            refreshMs
+        );
+        return 0;   // 🚫 NO UI, NO CLS
+    }
+
+    // ---------------- LIVE UI LOOP ----------------
     do {
-        if (!runOnce && !outputJsonFlag && !outputCsvFlag && _kbhit()) {
+        if (!runOnce && _kbhit()) {
             int ch = _getch();
             if (ch == 'q' || ch == 'Q') break;
         }
 
-        system("cls");
-
-        // ---------------- COLLECT DATA ----------------
-        CpuInfo cpu = getCpuInfo();
-        MemoryInfo mem = getMemoryInfo();
-        auto storageDevices = getStorageDevices();
-        SystemInfo sys = getSystemInfo();
-        GpuInfo gpu = getGpuInfo();
-        auto topMem = getTopMemoryProcesses(5);
-
-        // ---------------- JSON / CSV ----------------
-        if (outputJsonFlag) {
-            outputJson(
-                cpu,
-                mem,
-                storageDevices,
-                sys,
-                topMem,
-                gpu,
-                cpu.usage_percent,
-                mem.usage_percent,
-                1,
-                refreshMs
-            );
-            break;
+        if (interactive) {
+            system("cls");   // ✅ SAFE: never runs during export
         }
 
-        if (outputCsvFlag) {
-            outputCsv(
-                cpu,
-                mem,
-                storageDevices,
-                topMem,
-                gpu,
-                cpu.usage_percent,
-                mem.usage_percent,
-                1,
-                refreshMs
-            );
-            break;
-        }
+        // Refresh live stats
+        cpu = getCpuInfo();
+        mem = getMemoryInfo();
+        storageDevices = getStorageDevices();
+        sys = getSystemInfo();
+        gpu = getGpuInfo();
+        topMem = getTopMemoryProcesses(5);
 
         // ---------------- HEADER ----------------
         std::cout << CLR_BLUE
-                  << "=== SYSTEM BUDDY v4.1 ==="
+                  << "=== INSPECTR v4.1 ==="
                   << CLR_RESET << "\n";
 
         // ---------------- CPU ----------------
@@ -163,19 +179,13 @@ int main(int argc, char* argv[]) {
         std::cout << "OS       : " << CLR_PINK << sys.os << CLR_RESET << "\n";
         std::cout << "Uptime   : " << CLR_PINK << sys.uptime << CLR_RESET << "\n";
 
-        if (!runOnce) {
-            std::cout << CLR_DIM
-                      << "\nPress Q to quit"
-                      << CLR_RESET << "\n";
-        }
-
-        if (runOnce) break;
+        std::cout << CLR_DIM << "\nPress Q to quit" << CLR_RESET << "\n";
 
         std::this_thread::sleep_for(
             std::chrono::milliseconds(refreshMs)
         );
 
-    } while (true);
+    } while (!runOnce);
 
     return 0;
 }

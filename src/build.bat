@@ -14,7 +14,7 @@ cl /nologo /std:c++20 /EHsc /W4 ^
    monitor\process.cpp ^
    /I . /I monitor ^
    Advapi32.lib ^
-   /Fe:SystemBuddy.exe
+   /Fe:Inspectr.exe
 
 echo.
 echo Build finished.

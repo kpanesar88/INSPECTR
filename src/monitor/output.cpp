@@ -4,6 +4,21 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
+
+// ==========================
+// JSON ESCAPE HELPER
+// ==========================
+
+static std::string escapeJson(const std::string& s) {
+    std::string out;
+    for (char c : s) {
+        if (c == '\\') out += "\\\\";
+        else if (c == '"') out += "\\\"";
+        else out += c;
+    }
+    return out;
+}
 
 // ==========================
 // JSON OUTPUT
@@ -21,6 +36,8 @@ void outputJson(
     int samples,
     int intervalMs
 ) {
+    std::cout << std::fixed << std::setprecision(2);
+
     double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
     double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
@@ -30,7 +47,7 @@ void outputJson(
 
     // CPU
     std::cout << "  \"cpu\": {\n";
-    std::cout << "    \"name\": \"" << cpu.name << "\",\n";
+    std::cout << "    \"name\": \"" << escapeJson(cpu.name) << "\",\n";
     std::cout << "    \"usage_percent\": " << cpu.usage_percent << ",\n";
     std::cout << "    \"cores\": " << cpu.cores << ",\n";
     std::cout << "    \"threads\": " << cpu.threads << "\n";
@@ -45,16 +62,14 @@ void outputJson(
 
     // GPU
     std::cout << "  \"gpu\": {\n";
-    std::cout << "    \"name\": \"" << gpu.name << "\",\n";
+    std::cout << "    \"name\": \"" << escapeJson(gpu.name) << "\",\n";
     std::cout << "    \"vram_used_mb\": " << gpu.memory_used_mb << ",\n";
     std::cout << "    \"vram_total_mb\": " << gpu.memory_total_mb << ",\n";
-
-    if (gpu.usage_supported) {
-        std::cout << "    \"usage_percent\": " << gpu.usage_percent << "\n";
-    } else {
-        std::cout << "    \"usage_percent\": null\n";
-    }
-
+    std::cout << "    \"usage_percent\": ";
+    if (gpu.usage_supported)
+        std::cout << gpu.usage_percent << "\n";
+    else
+        std::cout << "null\n";
     std::cout << "  },\n";
 
     // STORAGE
@@ -66,9 +81,9 @@ void outputJson(
         double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
         std::cout << "    {\n";
-        std::cout << "      \"drive\": \"" << dev.drive << "\",\n";
-        std::cout << "      \"label\": \"" << dev.label << "\",\n";
-        std::cout << "      \"type\": \"" << dev.type << "\",\n";
+        std::cout << "      \"drive\": \"" << escapeJson(dev.drive) << "\",\n";
+        std::cout << "      \"label\": \"" << escapeJson(dev.label) << "\",\n";
+        std::cout << "      \"type\": \"" << escapeJson(dev.type) << "\",\n";
         std::cout << "      \"total_gb\": " << totalGB << ",\n";
         std::cout << "      \"used_gb\": " << usedGB << ",\n";
         std::cout << "      \"usage_percent\": " << dev.usage_percent << "\n";
@@ -91,7 +106,7 @@ void outputJson(
     for (size_t i = 0; i < topMem.size(); ++i) {
         const auto& p = topMem[i];
         std::cout << "    {\n";
-        std::cout << "      \"name\": \"" << p.name << "\",\n";
+        std::cout << "      \"name\": \"" << escapeJson(p.name) << "\",\n";
         std::cout << "      \"pid\": " << p.pid << ",\n";
         std::cout << "      \"used_mb\": " << p.mem_mb << "\n";
         std::cout << "    }";
@@ -102,8 +117,8 @@ void outputJson(
 
     // SYSTEM
     std::cout << "  \"system\": {\n";
-    std::cout << "    \"os\": \"" << sys.os << "\",\n";
-    std::cout << "    \"uptime\": \"" << sys.uptime << "\"\n";
+    std::cout << "    \"os\": \"" << escapeJson(sys.os) << "\",\n";
+    std::cout << "    \"uptime\": \"" << escapeJson(sys.uptime) << "\"\n";
     std::cout << "  }\n";
 
     std::cout << "}\n";
@@ -124,6 +139,8 @@ void outputCsv(
     int samples,
     int intervalMs
 ) {
+    std::cout << std::fixed << std::setprecision(2);
+
     double totalMemGB = mem.total_bytes / (1024.0 * 1024.0 * 1024.0);
     double usedMemGB  = mem.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
@@ -142,7 +159,7 @@ void outputCsv(
         << cpu.threads << ","
         << usedMemGB << ","
         << totalMemGB << ","
-        << gpu.name << ","
+        << escapeJson(gpu.name) << ","
         << gpu.memory_used_mb << ","
         << gpu.memory_total_mb << ",";
 

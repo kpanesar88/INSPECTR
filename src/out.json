@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-01-17T23:26:21Z",
+  "hostname": "ZORZEX",
+  "cpu": {
+    "name": "AMD Ryzen AI 7 350 w/ Radeon 860M              ",
+    "usage_percent": 13.14,
+    "cores": 8,
+    "threads": 16
+  },
+  "memory": {
+    "total_gb": 31.28,
+    "used_gb": 17.52,
+    "usage_percent": 56.03
+  },
+  "gpu": {
+    "name": "AMD Radeon(TM) 860M Graphics",
+    "vram_used_mb": 0.00,
+    "vram_total_mb": 15664.58,
+    "usage_percent": null
+  },
+  "storage": [
+    {
+      "drive": "C:\\",
+      "label": "Windows",
+      "type": "Fixed",
+      "total_gb": 952.83,
+      "used_gb": 272.41,
+      "usage_percent": 28.59
+    }
+  ],
+  "sampling": {
+    "samples": 1,
+    "interval_ms": 1000,
+    "avg_cpu_percent": 13.14,
+    "max_mem_percent": 56.03
+  },
+  "top_memory_processes": [
+    {
+      "name": "vivaldi.exe",
+      "pid": 2116,
+      "used_mb": 1307.26
+    },
+    {
+      "name": "Code.exe",
+      "pid": 10964,
+      "used_mb": 705.72
+    },
+    {
+      "name": "Discord.exe",
+      "pid": 18548,
+      "used_mb": 627.43
+    },
+    {
+      "name": "vivaldi.exe",
+      "pid": 16896,
+      "used_mb": 538.80
+    },
+    {
+      "name": "sourcery.exe",
+      "pid": 25248,
+      "used_mb": 471.47
+    }
+  ],
+  "system": {
+    "os": "Windows 11 (Build 26200)",
+    "uptime": "0d 7h 39m"
+  }
+}
