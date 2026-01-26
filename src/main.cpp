@@ -23,7 +23,6 @@ constexpr const char* CLR_DIM    = "\033[90m";
 
 int main(int argc, char* argv[]) {
 
-    // Prevent stdio sync artifacts
     std::ios::sync_with_stdio(false);
 
     int refreshMs = 1000;
@@ -45,11 +44,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    const bool interactive = !outputJsonFlag && !outputCsvFlag;
-
     std::cout << std::fixed << std::setprecision(2);
 
-    // ---------------- COLLECT DATA (ONCE) ----------------
+    // ---------------- INITIAL COLLECTION ----------------
     CpuInfo cpu = getCpuInfo();
     MemoryInfo mem = getMemoryInfo();
     auto storageDevices = getStorageDevices();
@@ -57,7 +54,7 @@ int main(int argc, char* argv[]) {
     GpuInfo gpu = getGpuInfo();
     auto topMem = getTopMemoryProcesses(5);
 
-    // ---------------- JSON / CSV (EARLY EXIT) ----------------
+    // ---------------- JSON / CSV (ONE-SHOT) ----------------
     if (outputJsonFlag) {
         outputJson(
             cpu,
@@ -71,7 +68,7 @@ int main(int argc, char* argv[]) {
             1,
             refreshMs
         );
-        return 0;   // 🚫 NO UI, NO CLS
+        return 0;
     }
 
     if (outputCsvFlag) {
@@ -86,21 +83,17 @@ int main(int argc, char* argv[]) {
             1,
             refreshMs
         );
-        return 0;   // 🚫 NO UI, NO CLS
+        return 0;
     }
 
-    // ---------------- LIVE UI LOOP ----------------
+    // ---------------- LIVE MONITOR LOOP ----------------
     do {
-        if (!runOnce && _kbhit()) {
+        if (_kbhit()) {
             int ch = _getch();
             if (ch == 'q' || ch == 'Q') break;
         }
 
-        if (interactive) {
-            system("cls");   // ✅ SAFE: never runs during export
-        }
-
-        // Refresh live stats
+        // Refresh stats
         cpu = getCpuInfo();
         mem = getMemoryInfo();
         storageDevices = getStorageDevices();
@@ -110,7 +103,7 @@ int main(int argc, char* argv[]) {
 
         // ---------------- HEADER ----------------
         std::cout << CLR_BLUE
-                  << "=== INSPECTR v4.1 ==="
+                  << "\n=== INSPECTR v4.1 ==="
                   << CLR_RESET << "\n";
 
         // ---------------- CPU ----------------
@@ -155,8 +148,7 @@ int main(int argc, char* argv[]) {
             double usedGB  = dev.used_bytes  / (1024.0 * 1024.0 * 1024.0);
 
             std::cout << CLR_PINK << dev.drive << CLR_RESET
-                      << " [" << dev.label << "] "
-                      << "(" << dev.type << ")\n";
+                      << " [" << dev.label << "] (" << dev.type << ")\n";
 
             std::cout << "  Used   : " << CLR_PINK
                       << usedGB << " / " << totalGB << " GB"
@@ -179,7 +171,7 @@ int main(int argc, char* argv[]) {
         std::cout << "OS       : " << CLR_PINK << sys.os << CLR_RESET << "\n";
         std::cout << "Uptime   : " << CLR_PINK << sys.uptime << CLR_RESET << "\n";
 
-        std::cout << CLR_DIM << "\nPress Q to quit" << CLR_RESET << "\n";
+        std::cout << CLR_DIM << "\nPress Q to quit\n" << CLR_RESET;
 
         std::this_thread::sleep_for(
             std::chrono::milliseconds(refreshMs)
