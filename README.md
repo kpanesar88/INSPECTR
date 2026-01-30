@@ -1,6 +1,6 @@
 # 🔍 INSPECTR
 
-**INSPECTR** is a lightweight, Windows-focused system monitoring CLI that provides real-time insights into CPU, memory, storage, processes, and GPU information — with optional JSON and CSV export support.
+**INSPECTR**is a lightweight Windows system monitoring CLI that provides real-time CPU, memory, storage, process, and GPU insights with JSON/CSV export support.
 
 ---
 
