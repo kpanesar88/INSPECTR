@@ -58,5 +58,39 @@ inspectr --once --json > output.json
 inspectr --once --csv  > output.csv
 ```
 
+## 🖥️ Platform Compatibility
+
+INSPECTR is designed and tested primarily on **Windows 11**.
+
+- Fully supported on Windows 11
+- Compatible with Windows 10, though minor formatting or metric discrepancies may occur due to OS-level reporting differences
+
+---
+
+## 📊 Validation & Accuracy
+
+INSPECTR was validated against Windows Task Manager across **15 samples** on **5 Windows 11 systems**.
+
+- CPU usage mean deviation: **±2.3%**
+- Maximum observed CPU deviation: **4.8%**
+- Memory usage deviation remained under **±1.5%**
+- Hardware identification accuracy: **100%**
+
+Observed CPU variance is attributed to differing sampling intervals between INSPECTR and Task Manager.
+
+
+## 📬 Contact
+
+- 🔗 **LinkedIn**: [Karanveer Panesar](https://www.linkedin.com/in/kpanesar88)
+- 💻 **GitHub**: [github.com/kpanesar](https://github.com/kpanesar)
+- 📧 **Email**: [karanveerpanesar04@gmail.com](mailto:karanveerpanesar04@gmail.com)
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.  
+See the `LICENSE` file for details.
+
 
 
