@@ -69,14 +69,14 @@ INSPECTR is designed and tested primarily on **Windows 11**.
 
 ## 📊 Validation & Accuracy
 
-INSPECTR was validated against Windows Task Manager across **30 samples** on **5 Windows 10 & 11 systems**.
+INSPECTR was validated against Windows Task Manager across 30 samples on Windows 10/11 systems.
 
-- CPU usage mean deviation: **±2.3%**
-- Maximum observed CPU deviation: **4.8%**
-- Memory usage deviation remained under **±1.5%**
-- Hardware identification accuracy: **100%**
+CPU usage mean deviation: ±2.3 percentage points
+Maximum observed CPU deviation: ~22.3 percentage points
+Memory usage deviation: consistently under ±1%
+Hardware identification accuracy: 100%
 
-Observed CPU variance is attributed to differing sampling intervals between INSPECTR and Task Manager.
+Observed CPU variance is attributed to differing sampling intervals and instantaneous versus averaged measurements between INSPECTR and Task Manager.
 
 
 ## 📬 Contact
