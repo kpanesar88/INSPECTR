@@ -74,7 +74,7 @@ INSPECTR was validated against Windows Task Manager across 30 samples on Windows
 - CPU usage mean deviation: ±2.3 percentage points
 - Maximum observed CPU deviation: ~22.3 percentage points
 - Memory usage deviation: consistently under ±1%
-- Hardware identification accuracy: 100%
+- Hardware identification accuracy: 99%
 
 Observed CPU variance is attributed to differing sampling intervals and instantaneous versus averaged measurements between INSPECTR and Task Manager.
 
