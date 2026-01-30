@@ -69,7 +69,7 @@ INSPECTR is designed and tested primarily on **Windows 11**.
 
 ## 📊 Validation & Accuracy
 
-INSPECTR was validated against Windows Task Manager across **15 samples** on **5 Windows 11 systems**.
+INSPECTR was validated against Windows Task Manager across **30 samples** on **5 Windows 10 & 11 systems**.
 
 - CPU usage mean deviation: **±2.3%**
 - Maximum observed CPU deviation: **4.8%**
